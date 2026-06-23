@@ -109,11 +109,12 @@ bool ParquetDocument::rowCount(const QString &whereClause, qsizetype *count, QSt
 
 bool ParquetDocument::queryPage(const QString &whereClause, qsizetype limit, qsizetype offset, QueryPage *page, QString *errorMessage)
 {
-    const QString sql = QStringLiteral("SELECT * FROM %1 %2 LIMIT %3 OFFSET %4")
+    QString sql = QStringLiteral("SELECT * FROM %1 %2")
         .arg(parquetSourceSql(),
-             whereClause.isEmpty() ? QString() : QStringLiteral("WHERE %1").arg(whereClause))
-        .arg(limit)
-        .arg(offset);
+             whereClause.isEmpty() ? QString() : QStringLiteral("WHERE %1").arg(whereClause));
+    if (limit >= 0) {
+        sql += QStringLiteral(" LIMIT %1 OFFSET %2").arg(limit).arg(offset);
+    }
 
     QJsonArray rows;
     if (!runJsonQuery(sql, &rows, errorMessage)) {

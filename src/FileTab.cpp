@@ -200,8 +200,10 @@ FileTab::FileTab(QString filePath, QWidget *parent)
     toolbar->addWidget(new QLabel(tr("Rows"), this));
 
     pageSize_ = new QSpinBox(this);
-    pageSize_->setRange(100, 100000);
+    pageSize_->setRange(-1, 100000);
     pageSize_->setSingleStep(500);
+    pageSize_->setSpecialValueText(tr("All (-1)"));
+    pageSize_->setToolTip(tr("Rows per page. Type -1 to show every matching row."));
     pageSize_->setValue(1000);
     connect(pageSize_, &QSpinBox::valueChanged, this, [this]() {
         offset_ = 0;
@@ -296,31 +298,51 @@ void FileTab::reload()
     }
 
     QueryPage page;
-    if (!document_->queryPage(whereClause, pageSize_->value(), offset_, &page, &error)) {
+    const qsizetype limit = pageSize_->value();
+    if (!document_->queryPage(whereClause, limit, limit < 0 ? 0 : offset_, &page, &error)) {
         statusLabel_->setText(error);
         return;
     }
 
     currentPageRows_ = page.rows.size();
-    model_->setResult(std::move(page.columns), std::move(page.rows), offset_);
+    model_->setResult(std::move(page.columns), std::move(page.rows), limit < 0 ? 0 : offset_);
     table_->resizeColumnsToContents();
     updatePageControls(filteredRows);
 }
 
 void FileTab::previousPage()
 {
+    if (pageSize_->value() < 0) {
+        return;
+    }
+
     offset_ = std::max<qsizetype>(0, offset_ - pageSize_->value());
     reload();
 }
 
 void FileTab::nextPage()
 {
+    if (pageSize_->value() < 0) {
+        return;
+    }
+
     offset_ += pageSize_->value();
     reload();
 }
 
 void FileTab::updatePageControls(qsizetype filteredRows)
 {
+    if (pageSize_->value() < 0) {
+        pageLabel_->setText(tr("All %1").arg(filteredRows));
+        previousButton_->setEnabled(false);
+        nextButton_->setEnabled(false);
+        statusLabel_->setText(tr("%1 columns. Showing all %2 rows from %3.")
+            .arg(document_->columnNames().size())
+            .arg(currentPageRows_)
+            .arg(filePath_));
+        return;
+    }
+
     const qsizetype firstRow = filteredRows == 0 ? 0 : offset_ + 1;
     const qsizetype lastRow = filteredRows == 0 ? 0 : std::min(offset_ + currentPageRows_, filteredRows);
 

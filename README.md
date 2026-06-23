@@ -10,7 +10,8 @@ The app is designed for Fedora and Ubuntu users who want to open Parquet files, 
 - VS Code-style file explorer for `.parquet` / `.parq` files
 - Multiple open files through tabs
 - Paged table display for large files
-- Global search across all columns
+- Global search across all rows and columns
+- Optional all-rows display by typing `-1` into the row count control
 - Quick filters such as `target = 1`, `score > 10`, and `active = true`
 - Visual filter builder:
   - equals / does not equal
