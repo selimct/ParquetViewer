@@ -1,4 +1,6 @@
 build/
 cmake-build-*/
+_CPack_Packages/
+*.deb
 *.user
 *.swp

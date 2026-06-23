@@ -72,6 +72,33 @@ Open files from the toolbar, by double-clicking `.parquet` files in the explorer
 ./build/parquet-viewer data/example.parquet
 ```
 
+## Ubuntu package
+
+The project can generate a `.deb` package with CPack. Build the release package on Ubuntu so Debian tooling can detect the correct CPU architecture and Qt shared-library dependencies.
+
+Install the build inputs:
+
+```bash
+sudo apt update
+sudo apt install build-essential cmake dpkg-dev qt6-base-dev duckdb
+```
+
+Then build and package:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+cpack --config build/CPackConfig.cmake
+```
+
+The package is written to `build/package/`. Install it with:
+
+```bash
+sudo apt install ./build/package/parquet-viewer_0.1.0_amd64.deb
+```
+
+The app uses the DuckDB CLI path found by CMake at build time. For a normal Ubuntu package build, make sure `duckdb` is available in `PATH` and resolves to the runtime path you expect, usually `/usr/bin/duckdb`.
+
 ## How filtering works
 
 The UI exposes simple filter rows:

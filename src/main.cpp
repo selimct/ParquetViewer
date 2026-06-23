@@ -7,6 +7,7 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     QApplication::setApplicationName(QStringLiteral("Parquet Viewer"));
+    QApplication::setDesktopFileName(QStringLiteral("parquet-viewer"));
     QApplication::setOrganizationName(QStringLiteral("ParquetViewer"));
 
     QCommandLineParser parser;
