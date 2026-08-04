@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Furkan Selim Cetin
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #pragma once
 
 #include "FilterCondition.h"
@@ -9,7 +12,8 @@ class QLineEdit;
 class QPushButton;
 class QVBoxLayout;
 
-class FilterBuilderWidget final : public QWidget {
+class FilterBuilderWidget final : public QWidget
+{
     Q_OBJECT
 
 public:
@@ -22,7 +26,8 @@ signals:
     void filtersApplied();
 
 private:
-    struct Row {
+    struct Row
+    {
         QWidget *container = nullptr;
         QComboBox *column = nullptr;
         QComboBox *op = nullptr;

@@ -4,3 +4,4 @@ cmake-build-*/
 *.swp
 _CPack_Packages/
 parquet-viewer*
+.vscode/

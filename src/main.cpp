@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Furkan Selim Cetin
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "MainWindow.h"
 
 #include <QApplication>

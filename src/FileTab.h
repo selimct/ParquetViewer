@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Furkan Selim Cetin
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #pragma once
 
 #include "FilterCondition.h"
@@ -17,7 +20,8 @@ class QTableView;
 class ParquetTableModel;
 class QComboBox;
 
-class FileTab final : public QWidget {
+class FileTab final : public QWidget
+{
     Q_OBJECT
 
 public:

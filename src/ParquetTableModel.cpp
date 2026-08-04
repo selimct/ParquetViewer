@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Furkan Selim Cetin
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "ParquetTableModel.h"
 
 ParquetTableModel::ParquetTableModel(QObject *parent)
@@ -17,16 +20,19 @@ int ParquetTableModel::columnCount(const QModelIndex &parent) const
 
 QVariant ParquetTableModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || role != Qt::DisplayRole) {
+    if (!index.isValid() || role != Qt::DisplayRole)
+    {
         return {};
     }
 
-    if (index.row() < 0 || index.row() >= rows_.size()) {
+    if (index.row() < 0 || index.row() >= rows_.size())
+    {
         return {};
     }
 
     const auto &row = rows_.at(index.row());
-    if (index.column() < 0 || index.column() >= row.size()) {
+    if (index.column() < 0 || index.column() >= row.size())
+    {
         return {};
     }
 
@@ -35,12 +41,15 @@ QVariant ParquetTableModel::data(const QModelIndex &index, int role) const
 
 QVariant ParquetTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (role != Qt::DisplayRole) {
+    if (role != Qt::DisplayRole)
+    {
         return {};
     }
 
-    if (orientation == Qt::Horizontal) {
-        if (section >= 0 && section < columns_.size()) {
+    if (orientation == Qt::Horizontal)
+    {
+        if (section >= 0 && section < columns_.size())
+        {
             return columns_.at(section);
         }
         return {};

@@ -111,3 +111,7 @@ If the text is not recognized as a quick filter, it is treated as a normal searc
 - Export filtered rows
 - Optional persistent cache/index metadata for repeated searches
 - Sorting support
+
+## License
+
+Parquet Viewer is free software licensed under the GNU General Public License v3.0 only. See [LICENSE](LICENSE) for the full license text.

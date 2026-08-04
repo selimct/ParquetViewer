@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Furkan Selim Cetin
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "FilterBuilderWidget.h"
 
 #include <QComboBox>
@@ -7,34 +10,32 @@
 #include <QStyle>
 #include <QVBoxLayout>
 
-namespace {
-
-QStringList operators()
+namespace
 {
-    return {
-        QStringLiteral("equals"),
-        QStringLiteral("does not equal"),
-        QStringLiteral("greater than"),
-        QStringLiteral("less than"),
-        QStringLiteral("at least"),
-        QStringLiteral("at most"),
-        QStringLiteral("contains text"),
-        QStringLiteral("starts with"),
-        QStringLiteral("ends with"),
-        QStringLiteral("is true"),
-        QStringLiteral("is false"),
-        QStringLiteral("is empty"),
-        QStringLiteral("is not empty"),
-    };
-}
 
-bool operatorNeedsValue(const QString &op)
-{
-    return op != QStringLiteral("is true")
-        && op != QStringLiteral("is false")
-        && op != QStringLiteral("is empty")
-        && op != QStringLiteral("is not empty");
-}
+    QStringList operators()
+    {
+        return {
+            QStringLiteral("equals"),
+            QStringLiteral("does not equal"),
+            QStringLiteral("greater than"),
+            QStringLiteral("less than"),
+            QStringLiteral("at least"),
+            QStringLiteral("at most"),
+            QStringLiteral("contains text"),
+            QStringLiteral("starts with"),
+            QStringLiteral("ends with"),
+            QStringLiteral("is true"),
+            QStringLiteral("is false"),
+            QStringLiteral("is empty"),
+            QStringLiteral("is not empty"),
+        };
+    }
+
+    bool operatorNeedsValue(const QString &op)
+    {
+        return op != QStringLiteral("is true") && op != QStringLiteral("is false") && op != QStringLiteral("is empty") && op != QStringLiteral("is not empty");
+    }
 
 } // namespace
 
@@ -60,12 +61,12 @@ FilterBuilderWidget::FilterBuilderWidget(QWidget *parent)
 
     auto *clearButton = new QPushButton(tr("Clear"));
     clearButton->setIcon(style()->standardIcon(QStyle::SP_DialogResetButton));
-    connect(clearButton, &QPushButton::clicked, this, [this]() {
+    connect(clearButton, &QPushButton::clicked, this, [this]()
+            {
         while (!rows_.isEmpty()) {
             removeConditionRow(rows_.last().container);
         }
-        emit filtersApplied();
-    });
+        emit filtersApplied(); });
     actions->addWidget(clearButton);
 
     auto *applyButton = new QPushButton(tr("Apply"));
@@ -81,12 +82,14 @@ void FilterBuilderWidget::setColumns(const QStringList &columns)
     columns_ = columns;
     addButton_->setEnabled(!columns_.isEmpty());
 
-    for (auto &row : rows_) {
+    for (auto &row : rows_)
+    {
         const QString current = row.column->currentText();
         row.column->clear();
         row.column->addItems(columns_);
         const int index = row.column->findText(current);
-        if (index >= 0) {
+        if (index >= 0)
+        {
             row.column->setCurrentIndex(index);
         }
     }
@@ -97,12 +100,14 @@ QVector<FilterCondition> FilterBuilderWidget::conditions() const
     QVector<FilterCondition> result;
     result.reserve(rows_.size());
 
-    for (const auto &row : rows_) {
+    for (const auto &row : rows_)
+    {
         FilterCondition condition;
         condition.column = row.column->currentText();
         condition.op = row.op->currentText();
         condition.value = row.value->text();
-        if (!condition.column.isEmpty()) {
+        if (!condition.column.isEmpty())
+        {
             result.push_back(std::move(condition));
         }
     }
@@ -112,7 +117,8 @@ QVector<FilterCondition> FilterBuilderWidget::conditions() const
 
 void FilterBuilderWidget::addConditionRow()
 {
-    if (columns_.isEmpty()) {
+    if (columns_.isEmpty())
+    {
         return;
     }
 
@@ -146,18 +152,18 @@ void FilterBuilderWidget::addConditionRow()
     rowsLayout_->addWidget(row.container);
     rows_.push_back(row);
 
-    connect(row.op, &QComboBox::currentTextChanged, this, [this, container = row.container]() {
+    connect(row.op, &QComboBox::currentTextChanged, this, [this, container = row.container]()
+            {
         for (auto &candidate : rows_) {
             if (candidate.container == container) {
                 refreshValueEditor(candidate);
                 break;
             }
-        }
-    });
-    connect(row.remove, &QPushButton::clicked, this, [this, container = row.container]() {
+        } });
+    connect(row.remove, &QPushButton::clicked, this, [this, container = row.container]()
+            {
         removeConditionRow(container);
-        emit filtersApplied();
-    });
+        emit filtersApplied(); });
     connect(row.value, &QLineEdit::returnPressed, this, &FilterBuilderWidget::filtersApplied);
 
     refreshValueEditor(rows_.last());
@@ -165,8 +171,10 @@ void FilterBuilderWidget::addConditionRow()
 
 void FilterBuilderWidget::removeConditionRow(QWidget *container)
 {
-    for (qsizetype i = 0; i < rows_.size(); ++i) {
-        if (rows_.at(i).container != container) {
+    for (qsizetype i = 0; i < rows_.size(); ++i)
+    {
+        if (rows_.at(i).container != container)
+        {
             continue;
         }
 
@@ -181,7 +189,8 @@ void FilterBuilderWidget::refreshValueEditor(Row &row)
 {
     const bool enabled = operatorNeedsValue(row.op->currentText());
     row.value->setEnabled(enabled);
-    if (!enabled) {
+    if (!enabled)
+    {
         row.value->clear();
     }
 }

@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Furkan Selim Cetin
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #pragma once
 
 #include <QMainWindow>
@@ -6,7 +9,8 @@ class QFileSystemModel;
 class QTabWidget;
 class QTreeView;
 
-class MainWindow final : public QMainWindow {
+class MainWindow final : public QMainWindow
+{
     Q_OBJECT
 
 public:

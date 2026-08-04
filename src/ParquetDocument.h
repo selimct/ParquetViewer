@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Furkan Selim Cetin
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #pragma once
 
 #include <QObject>
@@ -5,17 +8,20 @@
 #include <QStringList>
 #include <QVector>
 
-struct ColumnInfo {
+struct ColumnInfo
+{
     QString name;
     QString type;
 };
 
-struct QueryPage {
+struct QueryPage
+{
     QStringList columns;
     QVector<QVector<QString>> rows;
 };
 
-class ParquetDocument final : public QObject {
+class ParquetDocument final : public QObject
+{
     Q_OBJECT
 
 public:

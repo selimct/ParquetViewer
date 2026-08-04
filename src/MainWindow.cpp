@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Furkan Selim Cetin
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "MainWindow.h"
 
 #include "FileTab.h"
@@ -48,7 +51,8 @@ MainWindow::MainWindow(QWidget *parent)
     fileTree_->setHeaderHidden(false);
     fileTree_->setAnimated(true);
     fileTree_->setSortingEnabled(true);
-    for (int column = 1; column < fileModel_->columnCount(); ++column) {
+    for (int column = 1; column < fileModel_->columnCount(); ++column)
+    {
         fileTree_->hideColumn(column);
     }
     connect(fileTree_, &QTreeView::doubleClicked, this, &MainWindow::handleTreeActivated);
@@ -73,7 +77,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::openFiles(const QStringList &paths)
 {
-    for (const QString &path : paths) {
+    for (const QString &path : paths)
+    {
         openFilePath(path);
     }
 }
@@ -91,7 +96,8 @@ void MainWindow::openFile()
 void MainWindow::openDirectory()
 {
     const QString path = QFileDialog::getExistingDirectory(this, tr("Open folder"), QDir::homePath());
-    if (path.isEmpty()) {
+    if (path.isEmpty())
+    {
         return;
     }
 
@@ -101,13 +107,16 @@ void MainWindow::openDirectory()
 void MainWindow::openFilePath(const QString &path)
 {
     QFileInfo info(path);
-    if (!info.exists() || !info.isFile()) {
+    if (!info.exists() || !info.isFile())
+    {
         return;
     }
 
-    for (int index = 0; index < tabs_->count(); ++index) {
+    for (int index = 0; index < tabs_->count(); ++index)
+    {
         auto *tab = qobject_cast<FileTab *>(tabs_->widget(index));
-        if (tab != nullptr && tab->filePath() == info.absoluteFilePath()) {
+        if (tab != nullptr && tab->filePath() == info.absoluteFilePath())
+        {
             tabs_->setCurrentIndex(index);
             return;
         }
@@ -115,7 +124,8 @@ void MainWindow::openFilePath(const QString &path)
 
     auto *tab = new FileTab(info.absoluteFilePath(), tabs_);
     QString error;
-    if (!tab->load(&error)) {
+    if (!tab->load(&error))
+    {
         tab->deleteLater();
         QMessageBox::critical(this, tr("Could not open file"), error);
         return;
@@ -128,12 +138,14 @@ void MainWindow::openFilePath(const QString &path)
 
 void MainWindow::handleTreeActivated(const QModelIndex &index)
 {
-    if (!index.isValid()) {
+    if (!index.isValid())
+    {
         return;
     }
 
     const QString path = fileModel_->filePath(index);
-    if (QFileInfo(path).isFile()) {
+    if (QFileInfo(path).isFile())
+    {
         openFilePath(path);
     }
 }
