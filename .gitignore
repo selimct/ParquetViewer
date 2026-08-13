@@ -3,5 +3,5 @@ cmake-build-*/
 *.user
 *.swp
 _CPack_Packages/
-parquet-viewer*
+/parquet-viewer*
 .vscode/

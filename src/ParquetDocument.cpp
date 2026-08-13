@@ -3,6 +3,8 @@
 
 #include "ParquetDocument.h"
 
+#include <QCoreApplication>
+#include <QDir>
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -251,6 +253,18 @@ QString ParquetDocument::parquetSourceSql() const
 
 QString ParquetDocument::duckdbExecutable() const
 {
+    const QString bundledExecutable = QDir(QCoreApplication::applicationDirPath()).filePath(
+#ifdef Q_OS_WIN
+        QStringLiteral("duckdb.exe")
+#else
+        QStringLiteral("duckdb")
+#endif
+    );
+    if (QFileInfo(bundledExecutable).isExecutable())
+    {
+        return bundledExecutable;
+    }
+
     return QString::fromUtf8(DUCKDB_EXECUTABLE);
 }
 

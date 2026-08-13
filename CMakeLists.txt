@@ -5,6 +5,8 @@ project(ParquetViewer
     LANGUAGES CXX
 )
 
+include(GNUInstallDirs)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -47,4 +49,10 @@ target_compile_options(parquet-viewer PRIVATE
     $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
 )
 
-install(TARGETS parquet-viewer RUNTIME DESTINATION bin)
+install(TARGETS parquet-viewer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES packaging/linux/parquet-viewer.desktop
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
+)
+install(FILES packaging/linux/parquet-viewer.svg
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
+)

@@ -1,0 +1,239 @@
+name: Build release applications
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  linux-appimage:
+    name: Linux AppImage (x86_64)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out the released tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Install build dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            ca-certificates \
+            curl \
+            libgl1-mesa-dev \
+            ninja-build \
+            python3-pip \
+            qt6-base-dev \
+            qt6-base-dev-tools \
+            unzip \
+            xvfb
+          python3 -m pip install --user "cmake==3.31.6"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/cmake" --version
+
+      - name: Download DuckDB CLI
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p tools
+          curl --fail --location --retry 3 \
+            "https://github.com/duckdb/duckdb/releases/latest/download/duckdb_cli-linux-amd64.zip" \
+            --output tools/duckdb.zip
+          curl --fail --location --retry 3 \
+            "https://raw.githubusercontent.com/duckdb/duckdb/main/LICENSE" \
+            --output tools/duckdb-LICENSE
+          unzip tools/duckdb.zip -d tools
+          chmod +x tools/duckdb
+          tools/duckdb --version
+
+      - name: Build and install
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export PATH="$PWD/tools:$PATH"
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr
+          cmake --build build --parallel 2
+          DESTDIR="$PWD/AppDir" cmake --install build
+          install -m 755 tools/duckdb AppDir/usr/bin/duckdb
+          mkdir -p AppDir/usr/share/doc/parquet-viewer
+          install -m 644 LICENSE AppDir/usr/share/doc/parquet-viewer/LICENSE
+          install -m 644 tools/duckdb-LICENSE AppDir/usr/share/doc/parquet-viewer/duckdb-LICENSE
+
+      - name: Create AppImage with runtime dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          curl --fail --location --retry 3 \
+            "https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20251107-1/linuxdeploy-x86_64.AppImage" \
+            --output tools/linuxdeploy-x86_64.AppImage
+          curl --fail --location --retry 3 \
+            "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/1-alpha-20250213-1/linuxdeploy-plugin-qt-x86_64.AppImage" \
+            --output tools/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x tools/*.AppImage
+
+          # Extract the build tools so the hosted runner does not need FUSE.
+          (
+            cd tools
+            ./linuxdeploy-x86_64.AppImage --appimage-extract >/dev/null
+            mv squashfs-root linuxdeploy
+            ./linuxdeploy-plugin-qt-x86_64.AppImage --appimage-extract >/dev/null
+            mv squashfs-root plugin-qt
+            rm ./*.AppImage
+            ln -s "$PWD/plugin-qt/AppRun" linuxdeploy/usr/bin/linuxdeploy-plugin-qt
+          )
+
+          export QMAKE=/usr/bin/qmake6
+          export NO_STRIP=1
+          export OUTPUT=ParquetViewer-Linux-x86_64.AppImage
+          tools/linuxdeploy/AppRun \
+            --appdir AppDir \
+            --executable AppDir/usr/bin/parquet-viewer \
+            --desktop-file packaging/linux/parquet-viewer.desktop \
+            --icon-file packaging/linux/parquet-viewer.svg \
+            --plugin qt \
+            --output appimage
+
+      - name: Smoke-test the AppImage
+        shell: bash
+        run: |
+          set +e
+          timeout 10s xvfb-run -a ./ParquetViewer-Linux-x86_64.AppImage --appimage-extract-and-run
+          status=$?
+          set -e
+          if [ "$status" -ne 124 ]; then
+            echo "AppImage exited unexpectedly with status $status"
+            exit 1
+          fi
+
+      - name: Stage Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-release
+          path: ParquetViewer-Linux-x86_64.AppImage
+          if-no-files-found: error
+
+  windows-portable:
+    name: Windows portable ZIP (x64)
+    runs-on: windows-2022
+    steps:
+      - name: Check out the released tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Install MSYS2 dependencies
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-qt6-base
+            unzip
+
+      - name: Download DuckDB CLI
+        shell: msys2 {0}
+        run: |
+          set -euxo pipefail
+          mkdir -p tools
+          curl --fail --location --retry 3 \
+            "https://github.com/duckdb/duckdb/releases/latest/download/duckdb_cli-windows-amd64.zip" \
+            --output tools/duckdb.zip
+          curl --fail --location --retry 3 \
+            "https://raw.githubusercontent.com/duckdb/duckdb/main/LICENSE" \
+            --output tools/duckdb-LICENSE
+          unzip tools/duckdb.zip -d tools
+          tools/duckdb.exe --version
+
+      - name: Build
+        shell: msys2 {0}
+        run: |
+          set -euxo pipefail
+          export PATH="$PWD/tools:$PATH"
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --parallel 2
+
+      - name: Collect application and runtime DLLs
+        shell: msys2 {0}
+        run: |
+          set -euxo pipefail
+          package_dir="$PWD/dist/ParquetViewer"
+          mkdir -p "$package_dir"
+          cp build/parquet-viewer.exe tools/duckdb.exe LICENSE "$package_dir/"
+          cp tools/duckdb-LICENSE "$package_dir/duckdb-LICENSE"
+
+          windeployqt6 --release --no-translations "$package_dir/parquet-viewer.exe"
+
+          # Add MinGW libraries that windeployqt does not collect. Repeat until
+          # all transitive dependencies of the executable and DLLs are present.
+          while true; do
+            before=$(find "$package_dir" -type f -name '*.dll' | wc -l)
+            while IFS= read -r -d '' binary; do
+              while IFS= read -r dependency; do
+                [ -z "$dependency" ] || cp -n "$dependency" "$package_dir/"
+              done < <(ldd "$binary" | awk '
+                $3 ~ /^\/ucrt64\/bin\// { print $3 }
+                $1 ~ /^\/ucrt64\/bin\// { print $1 }
+              ')
+            done < <(find "$package_dir" -type f \( -name '*.exe' -o -name '*.dll' \) -print0)
+            after=$(find "$package_dir" -type f -name '*.dll' | wc -l)
+            [ "$before" -eq "$after" ] && break
+          done
+
+          cp -R /ucrt64/share/licenses "$package_dir/licenses"
+
+      - name: Smoke-test the portable application
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath "dist/ParquetViewer/parquet-viewer.exe" -PassThru
+          Start-Sleep -Seconds 5
+          if ($process.HasExited) {
+            throw "Parquet Viewer exited unexpectedly with code $($process.ExitCode)"
+          }
+          Stop-Process -Id $process.Id
+
+      - name: Create Windows ZIP
+        shell: pwsh
+        run: Compress-Archive -Path dist/ParquetViewer -DestinationPath ParquetViewer-Windows-x64.zip
+
+      - name: Stage Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: ParquetViewer-Windows-x64.zip
+          if-no-files-found: error
+
+  attach-to-release:
+    name: Attach packages to GitHub Release
+    needs: [linux-appimage, windows-portable]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download completed packages
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Upload packages to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        shell: bash
+        run: |
+          cd release-assets
+          sha256sum ./* > SHA256SUMS
+          gh release upload "$RELEASE_TAG" ./* --clobber --repo "$GITHUB_REPOSITORY"

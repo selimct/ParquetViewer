@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Parquet Viewer
+GenericName=Parquet File Viewer
+Comment=Open, inspect, and filter Parquet files
+Exec=parquet-viewer %F
+Icon=parquet-viewer
+Terminal=false
+Categories=Utility;Database;Qt;
+MimeType=application/vnd.apache.parquet;
+Keywords=parquet;duckdb;data;table;
+StartupNotify=true
