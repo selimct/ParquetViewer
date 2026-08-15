@@ -2,7 +2,10 @@
 
 A Linux-first desktop Parquet viewer written in C++.
 
-The app is designed for Fedora and Ubuntu users who want to open Parquet files, inspect them as tables, keep multiple files open, and filter rows without writing SQL.
+The app is designed for Linux users who want to open Parquet files, inspect them as tables, keep multiple files open, and filter rows without writing SQL.
+It is also available for Windows as a portable exe.
+
+
 
 ## Current features
 
@@ -24,7 +27,25 @@ The app is designed for Fedora and Ubuntu users who want to open Parquet files, 
 
 Users never need to type a `WHERE` clause. The UI builds safe filter expressions internally from dropdowns and input fields.
 
-## Build
+
+## Installation
+
+### Download a finished application
+
+Each published GitHub Release contains ready-to-run x86-64 packages:
+
+- **Linux (Fedora and Ubuntu):** download `ParquetViewer-Linux-x86_64.AppImage`,
+  make it executable, and run it:
+
+  ```bash
+  chmod +x ParquetViewer-Linux-x86_64.AppImage
+  ./ParquetViewer-Linux-x86_64.AppImage
+  ```
+
+- **Windows:** download `ParquetViewer-Windows-x64.zip`, extract the whole
+  `ParquetViewer` folder, and run `parquet-viewer.exe` from that folder.
+
+## Build from Source
 
 ### Requirements
 
